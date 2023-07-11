@@ -1,0 +1,624 @@
+import mysql.connector as sqltor
+import pandas as pd
+from tabulate import tabulate
+con=sqltor.connect(host="localhost",user="root",passwd="yashyadav19703")
+cur=con.cursor()
+cur.execute("CREATE DATABASE IF NOT EXISTS RideON2")
+
+cur.execute('USE RideON2')
+
+def welcome():
+    print("""  
+  
+               ___       ___   ___            ___    _______  _____      _____       _____   ____  _____
+     |      | |    |    |   | |   | |\    /| |          |    |     |    |_____|   | |     | |     |     | |\   |
+     |  /\  | |__  |    |     |   | | \  / | |__        |    |     |    |\        | |     | |____ |     | | \  |
+     | /  \ | |    |    |     |   | |  \/  | |          |    |     |    | \       | |     | |     |     | |  \ |
+     |/    \| |___ |___ |___| |___| |      | |___       |    |_____|    |  \      | |_____| |____ |_____| |   \|
+     ___________________________________________________________________________________________________________
+  
+    
+    """)
+
+def menutour_c():
+    print("""
+*-------------------------------------------------------------------------*
+|                                                                          |
+|                       CHOOSE ONE OF THE GIVEN OPTION :-                  |
+|__________________________________________________________________________|                                    
+|                                                                          |
+|1. Show available drivers                                                 |
+|2. Show drivers with rating above 3                                       |                               
+|3. Print the no of Rental Stands in a particular city/place               |                                     
+|4. Print the details of top 10 drivers wrt rating                         |
+|5. When the address is not clear                                          |
+|6. Money spent by each customer monthly in a year                         |
+|7. Start a journey(trigger)                                               |
+|8. Exit app                                                               |               
+*-------------------------------------------------------------------------*
+""")
+          
+def menutour_d():
+    print("""
+*-------------------------------------------------------------------------*
+|                                                                          |
+|                       CHOOSE ONE OF THE GIVEN OPTION :-                  |
+|__________________________________________________________________________|                                    
+|                                                                          |
+|1. Show available drivers                                                 |
+|2. Show drivers with rating above 3                                       |                    
+|3. Print the average income of the drivers                                |                                        
+|4. Details of drivers with income > 1L                                    |                   
+|5. Print the details of top 10 drivers wrt rating                         |
+|6. Total earning of each driver monthly                                   | 
+|7. Trigger to update driver earnings                                      |
+|8. Trigger to show a car is unavailable                                   |
+|9.  Exit app                                                              |               
+*-------------------------------------------------------------------------*
+""")
+          
+def menutour_e():
+    print("""
+*-------------------------------------------------------------------------*
+|                                                                          |
+|                       CHOOSE ONE OF THE GIVEN OPTION :-                  |
+|__________________________________________________________________________|                                    
+|                                                                          |
+|1. Show available drivers                                                 |
+|2. Show drivers with rating above 3                                       |                    
+|3. Print the average income of the drivers                                |                    
+|4. Print the no of Rental Stands in a particular city/place               |                    
+|5. Details of drivers with income > 1L                                    |                   
+|6. Print the details of top 10 drivers wrt rating                         |
+|7. Print the trips on a particular day                                    |
+|9. Print the details of the customers who haven't done any ride           |
+|10. Print the trips of two particular customers                           |
+|11. Use wildcard                                                          |
+|13. Union of two queries                                                  |
+|15. OLAP query to compare the revenue generated by rides                  |
+|16. OLAP query to see how much revenue is generated by each cab           |
+|17. Percentage of rides with payment method-'Cash'                        |
+|18. Total earning of each driver monthly                                  |
+|19. Same query as 18. with different implementation                       |
+|20. Money spent by each customer monthly in a year                        |
+|21. Same query as 20. with different implementation                       | 
+|22. Trigger to update driver earnings                                     |
+|23. Trigger to update vehicle status                                      |
+|24. Trigger to show a car is unavailable                                  |
+|25. Non- Conflicting Transactions                                         |     
+|26. Conflicting Transactions -1                                           |
+|27. Conflicting Transactions -2                                           |
+|28. Exit                                                                  |
+*-------------------------------------------------------------------------*
+""")
+
+veiw = -1
+
+while True:
+       print("1 : Customer")
+       print("2 : Employees")
+       print("3 : Driver")
+
+       veiw = int(input("Mode: "))
+       if (veiw == 1 or veiw == 2 or veiw == 3):
+              break
+       
+
+id = int(input("Your id: "))
+# print(veiw)
+if veiw == 1:
+        query = "SELECT COUNT(*) FROM Customer USE INDEX (cu_id) WHERE Customerid = %s"
+        cur.execute(query, (id,))
+
+        # Fetch the result of the query
+        result = cur.fetchone()
+
+        # Check if the trip ID exists
+        if result[0] == 1:
+                print("Welcome")
+                while True:
+                        # welcome()
+                        menutour_c()
+                        m = int(input("Enter the number of the query you want to run: "))
+
+                        if(m==1):
+                                df=pd.read_sql_query('SELECT driver.DriverID, driver.Name , driver.Rating , driver.VehicleID, vehicles.Capacity, vehicles.Status, vehicles.Model FROM driver JOIN vehicles ON driver.VehicleID = vehicles.VehicleID WHERE vehicles.Status =  "Available";', con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['DriverID','Name','Rating','VehicleID','Capacity', 'Status','Model']))
+                                con.commit()
+                                print()
+                        if(m==2):
+                                df=pd.read_sql_query('SELECT driver.DriverID, driver.Name , driver.Rating , driver.VehicleID, driver.Rating, driver.Email FROM Driver WHERE Rating >3;', con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['DriverID','Name','Rating','VehicleID','Rating', 'Email']))
+                                con.commit()
+                                print()
+
+                        if(m==3):
+                                print('Enter the name of the city you want to find the number of stands in:')
+                                inp = input()
+                                cur.execute('SELECT COUNT(DetailsofStand) FROM rentalservice where DetailsofStand = (%s);', (inp,))
+                                d = cur.fetchall()
+                                for i in d:
+                                        print("The number of stand in",inp,"is:",d[0][0])
+
+                        if(m==4):
+                                df=pd.read_sql_query('SELECT driver.DriverID, driver.Name , driver.Rating , driver.VehicleID, vehicles.Capacity, vehicles.Status, vehicles.Model, driver.TotalEarning FROM driver JOIN vehicles ON driver.VehicleID = vehicles.VehicleID ORDER BY TotalEarning DESC LIMIT 10;', con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['DriverID','Name','Rating','VehicleID','Capacity','Status','Model','Total Earning']))
+                                con.commit()
+                                print()
+                        
+                        if(m==5):
+                                df=pd.read_sql_query("SELECT * FROM trip WHERE PickupLocation LIKE '%am%';", con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['PickUpLoc','DropLoc','CustomerId','Price','TripId', 'VehicleID','PaymentMethod','Date']))
+                                con.commit()
+                                print()
+
+                        if(m==6):
+                                df=pd.read_sql_query("SELECT CustomerID, YEAR(Date) AS Year, MONTH(Date) AS Month, SUM(Price) AS Total_Spent FROM Trip  GROUP BY CustomerID, YEAR(Date), MONTH(Date) ORDER BY CustomerID ASC;", con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['CusotmerId','Year','Month','Total spent']))
+                                con.commit()
+                                print()
+
+                        if(m==7):
+                                # cur.execute("""CREATE TRIGGER update_vehicle_status1 AFTER INSERT ON Trip FOR EACH ROW BEGIN UPDATE Vehicles SET Status = 'Unavailable' WHERE VehicleID = NEW.VehicleID; END""")
+                                # con.commit()
+                                cur.execute("insert into trip (PickupLocation, DropLocation, CustomerID, Price, VehicleID, PaymentMethod, Date) values ('NP', 'Kurukshetra', 61, 900, 11, 100, '2022-03-07 22:19:29');")
+                                con.commit()
+                                df=pd.read_sql_query("""SELECT Status FROM Vehicles WHERE VehicleID = 11;""", con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['CusotmerId','Year','Month','Total spent']))
+                                con.commit()
+                                print()      
+
+                        if(m==8):
+                                break
+
+        else:
+                print("Customer ID does not exist")
+
+if veiw == 2:
+        query = "SELECT COUNT(*) FROM Employees USE INDEX (em_id) WHERE EmployeeId = %s"
+        cur.execute(query, (id,))
+
+        # Fetch the result of the query
+        result = cur.fetchone()
+        if result[0] == 1:
+                print("Welcome")
+                while True:
+                        # welcome()
+                        menutour_e()
+                        m = int(input("Enter the number of the query you want to run: "))
+
+                        if(m==1):
+                                df=pd.read_sql_query('SELECT driver.DriverID, driver.Name , driver.Rating , driver.VehicleID, vehicles.Capacity, vehicles.Status, vehicles.Model FROM driver JOIN vehicles ON driver.VehicleID = vehicles.VehicleID WHERE vehicles.Status =  "Available";', con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['DriverID','Name','Rating','VehicleID','Capacity', 'Status','Model']))
+                                con.commit()
+                                print()
+                        if(m==2):
+                                df=pd.read_sql_query('SELECT driver.DriverID, driver.Name , driver.Rating , driver.VehicleID, driver.Rating, driver.Email FROM Driver WHERE Rating >3;', con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['DriverID','Name','Rating','VehicleID','Rating', 'Email']))
+                                con.commit()
+                                print()
+
+                        if(m==3):
+                                cur.execute('SELECT AVG(driver.TotalEarning) FROM driver;')
+                                d=cur.fetchall()
+
+                                for i in d:
+                                        print("The average earning of the driver is:",d[0][0])
+
+                        if(m==4):
+                                print('Enter the name of the city you want to find the number of stands in:')
+                                inp = input()
+                                cur.execute('SELECT COUNT(DetailsofStand) FROM rentalservice where DetailsofStand = (%s);', (inp,))
+                                d = cur.fetchall()
+                                for i in d:
+                                        print("The number of stand in",inp,"is:",d[0][0])
+
+                        if(m==5):
+                                df=pd.read_sql_query('SELECT * FROM employees WHERE Salary BETWEEN 100000 AND 150000;', con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['EmployeeID','Name','Post','Email','BankInfo', 'PhoneNumber','Salary','Password']))
+                                con.commit()
+                                print()
+
+                        if(m==6):
+                                df=pd.read_sql_query('SELECT driver.DriverID, driver.Name , driver.Rating , driver.VehicleID, vehicles.Capacity, vehicles.Status, vehicles.Model, driver.TotalEarning FROM driver JOIN vehicles ON driver.VehicleID = vehicles.VehicleID ORDER BY TotalEarning DESC LIMIT 10;', con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['DriverID','Name','Rating','VehicleID','Capacity','Status','Model','Total Earning']))
+                                con.commit()
+                                print()
+                        
+                        if(m==7):
+                                df=pd.read_sql_query("SELECT * FROM trip WHERE Date='2022-11-11';", con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['PickUpLoc','DropLoc','CustomerId','Price','TripId', 'VehicleID','PaymentMethod','Date']))
+                                con.commit()
+                                print()
+
+                        if(m==9):
+                                df=pd.read_sql_query("SELECT * FROM customer WHERE CustomerID  NOT IN ( SELECT DISTINCT CustomerID FROM trip );", con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['Name','PhoneNumber','Rating','Email','Password','CustomerID']))
+                                con.commit()
+                                print()
+
+                        if(m==10):
+                                df=pd.read_sql_query("select * from trip  where CustomerID = 90 or CustomerID = 52; ", con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['PickUpLoc','DropLoc','CustomerId','Price','TripId', 'VehicleID','PaymentMethod','Date']))
+                                con.commit()
+                                print()
+                        
+                        if(m==11):
+                                df=pd.read_sql_query("SELECT * FROM trip WHERE PickupLocation LIKE '%am%';", con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['PickUpLoc','DropLoc','CustomerId','Price','TripId', 'VehicleID','PaymentMethod','Date']))
+                                con.commit()
+                                print()
+
+                        if(m==13):
+                                df=pd.read_sql_query("SELECT Name, PhoneNumber  FROM driver UNION SELECT Name, PhoneNumber FROM customer;", con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['Name','PhoneNumber']))
+                                con.commit()
+                                print()
+
+                        if(m==15):
+                                df=pd.read_sql_query("SELECT  IF(PickupLocation IS NULL, 'Combined', PickupLocation) AS PickupLocation, SUM(Price) AS TotalRevenue FROM Trip WHERE PickupLocation IN ('Ambala', 'Kurukshetra') GROUP BY PickupLocation WITH ROLLUP;", con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['PickupLoc','Revenue']))
+                                con.commit()
+                                print()
+                                
+                        if(m==16):
+                                df=pd.read_sql_query("SELECT IFNULL(Vehicles.Model, 'Combined') AS Model, SUM(Trip.Price) AS TotalRevenue  FROM Trip  LEFT JOIN Vehicles  ON Trip.VehicleID = Vehicles.VehicleID  WHERE YEAR(Trip.Date) = YEAR(CURRENT_DATE) - 1  GROUP BY Model WITH ROLLUP ORDER BY CASE WHEN Model = 'Combined' THEN 1 ELSE 0 END, TotalRevenue DESC  LIMIT 0, 200; ", con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['Model','Revenue']))
+                                con.commit()
+                                print()
+
+                        if(m==17):
+                                df=pd.read_sql_query("SELECT IF(Trip.PickupLocation IS NULL, 'Combined', Trip.PickupLocation) AS PickupLocation, COUNT(CASE WHEN Payment.Type <> 'cash' THEN 1 END) / COUNT(*) * 100 AS NonCashRidePercentage FROM Trip JOIN Payment ON Trip.PaymentMethod = Payment.Payment_id WHERE  YEAR(Trip.Date) = YEAR(CURRENT_DATE) - 1 GROUP BY  Trip.PickupLocation WITH ROLLUP;", con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['PickupLoc','Non cash ride percentage']))
+                                con.commit()
+                                print()
+                        
+                        if(m==18):
+                                df=pd.read_sql_query("SELECT d.DriverID, YEAR(t.Date) AS Year, MONTH(t.Date) AS Month, SUM(t.Price) AS Earnings FROM Trip t INNER JOIN Vehicles v ON t.VehicleID = v.VehicleID INNER JOIN Driver d ON v.VehicleID = d.VehicleID GROUP BY d.DriverID, YEAR(t.Date), MONTH(t.Date) ORDER BY d.DriverID ASC;", con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['Driver Id','Year','Month','Earning']))
+                                con.commit()
+                                print()
+                        
+                        if(m==19):
+                                df=pd.read_sql_query("SELECT d.DriverID, YEAR(t.Date) AS Year, MONTH(t.Date) AS Month, SUM(t.Price) AS Earnings FROM Trip t INNER JOIN Vehicles v ON t.VehicleID = v.VehicleID INNER JOIN Driver d ON v.VehicleID = d.VehicleID GROUP BY d.DriverID, YEAR(t.Date), MONTH(t.Date) UNION ALL SELECT d.DriverID, YEAR(t.Date) AS Year, NULL AS Month, SUM(t.Price) AS Earnings FROM Trip t INNER JOIN Vehicles v ON t.VehicleID = v.VehicleID INNER JOIN Driver d ON v.VehicleID = d.VehicleID GROUP BY d.DriverID, YEAR(t.Date) UNION ALL SELECT d.DriverID, NULL AS Year, NULL AS Month, SUM(t.Price) AS Earnings FROM Trip t INNER JOIN Vehicles v ON t.VehicleID = v.VehicleID INNER JOIN Driver d ON v.VehicleID = d.VehicleID GROUP BY d.DriverID ORDER BY DriverID ASC;", con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['Driver Id','Year','Month','Earning']))
+                                con.commit()
+                                print()
+
+                        if(m==20):
+                                df=pd.read_sql_query("SELECT CustomerID, YEAR(Date) AS Year, MONTH(Date) AS Month, SUM(Price) AS Total_Spent FROM Trip  GROUP BY CustomerID, YEAR(Date), MONTH(Date) ORDER BY CustomerID ASC;", con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['CusotmerId','Year','Month','Total spent']))
+                                con.commit()
+                                print()
+
+                        if(m==21):
+                                df=pd.read_sql_query("""SELECT 
+                                1 AS CustomerID, 
+                                2022 AS Year, 
+                                11 AS Month, 
+                                SUM(Price) AS Total_Spent
+                                FROM Trip 
+                                WHERE CustomerID = 1 AND YEAR(Date) = 2022 AND MONTH(Date) = 11
+
+                                UNION
+
+                                -- Query for the set (1, 2022, 2)
+                                SELECT 
+                                1 AS CustomerID, 
+                                2022 AS Year, 
+                                2 AS Month, 
+                                SUM(Price) AS Total_Spent
+                                FROM Trip 
+                                WHERE CustomerID = 1 AND YEAR(Date) = 2022 AND MONTH(Date) = 2
+
+                                UNION
+
+                                -- Query for the set (3, 2022, 10)
+                                SELECT 
+                                3 AS CustomerID, 
+                                2022 AS Year, 
+                                10 AS Month, 
+                                SUM(Price) AS Total_Spent
+                                FROM Trip 
+                                WHERE CustomerID = 3 AND YEAR(Date) = 2022 AND MONTH(Date) = 10
+
+                                UNION
+
+                                -- Query for the set (2, 2022, 2)
+                                SELECT 
+                                2 AS CustomerID, 
+                                2022 AS Year, 
+                                2 AS Month, 
+                                SUM(Price) AS Total_Spent
+                                FROM Trip 
+                                WHERE CustomerID = 2 AND YEAR(Date) = 2022 AND MONTH(Date) = 2""", con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['CusotmerId','Year','Month','Total spent']))
+                                con.commit()
+                                print()
+
+                        if(m==22):
+                                # cur.execute("""CREATE TRIGGER update_driver_earning1
+                                #     AFTER INSERT ON Trip
+                                #     FOR EACH ROW
+                                #     BEGIN
+                                #         UPDATE Driver
+                                #         SET TotalEarning = TotalEarning + NEW.Price
+                                #         WHERE Driver.DriverID = NEW.DriverID;
+                                #     END;""")
+                                # con.commit()
+                                cur.execute("INSERT INTO trip (PickupLocation, DropLocation, CustomerID, Price, VehicleID, PaymentMethod, Date) values ('NP', 'Kurukshetra', 65, 900, 10, 100, '2022-03-07');")
+                                con.commit()
+                                df=pd.read_sql_query("""SELECT TotalEarning FROM Driver WHERE DriverID = 1;""", con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['CusotmerId','Year','Month','Total spent']))
+                                con.commit()
+                                print()
+
+                        if(m==23):
+                                # cur.execute("""CREATE TRIGGER update_vehicle_status1 AFTER INSERT ON Trip FOR EACH ROW BEGIN UPDATE Vehicles SET Status = 'Unavailable' WHERE VehicleID = NEW.VehicleID; END""")
+                                # con.commit()
+                                cur.execute("insert into trip (PickupLocation, DropLocation, CustomerID, Price, VehicleID, PaymentMethod, Date) values ('NP', 'Kurukshetra', 61, 900, 11, 100, '2022-03-07 22:19:29');")
+                                con.commit()
+                                df=pd.read_sql_query("""SELECT Status FROM Vehicles WHERE VehicleID = 11;""", con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['CusotmerId','Year','Month','Total spent']))
+                                con.commit()
+                                print()      
+
+                        if(m==24):
+                                # cur.execute("""CREATE TRIGGER check_vehicle_status1
+                        # BEFORE INSERT ON Trip
+                        # FOR EACH ROW
+                        # BEGIN
+                        #     DECLARE vehicle_status VARCHAR(10);
+                        #     SELECT Status INTO vehicle_status
+                        #     FROM Vehicles
+                        #     WHERE VehicleID = NEW.VehicleID;
+                        
+                        #     IF vehicle_status = 'Unavailable' THEN
+                        #         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Vehicle is already on a trip';
+                        #     END IF;
+                        # END;""")
+                                # con.commit()
+                                cur.execute("insert into vehicles (Status, RegistrationNo, Model, LicenseNO, Colour, Capacity) values ('Unavailable', 'OgdJQEZcJ21', 'Alto', '1G4HD57228U4932861', 'Mauv', 3);")
+                                con.commit()
+                                df=pd.read_sql_query("""INSERT INTO trip (PickupLocation, DropLocation, CustomerID, Price, VehicleID, PaymentMethod, Date) values ('NP', 'Kurukshetra', 65, 900, 121, 100, '2022-03-07');""", con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['CusotmerId','Year','Month','Total spent']))
+                                con.commit()
+                                print()    
+
+                        if(m==28):
+                                break
+                        
+                        if (m == 25):
+                                try:
+                                        cur.execute("""
+                                                START TRANSACTION;
+                                                UPDATE TaxiService
+                                                SET ChargesPerKm = 15
+                                                WHERE ServiceID = 1;
+                                                COMMIT;
+                                        """, multi=True)
+                                        cur.execute("""
+                                                START TRANSACTION;
+                                                INSERT INTO RentalService (ChargesPerDay, NoCabAvailable, DetailsofStand) 
+                                                VALUES (500, 5, 'MG Road');
+                                                UPDATE RentalService SET NoCabAvailable = 10 WHERE ServiceID = LAST_INSERT_ID();
+                                                COMMIT;
+                                        """ , multi=True)
+                                        cur.execute("""
+                                                START TRANSACTION;
+                                                UPDATE Driver
+                                                SET VehicleID = (SELECT VehicleID FROM Vehicles WHERE RegistrationNo = 'YV4952CY4C1530506')
+                                                WHERE DriverID = 4 AND (SELECT VehicleID FROM Vehicles WHERE RegistrationNo = 'YV4952CY4C1530506') IS NOT NULL;
+                                                COMMIT;
+                                        """ , multi=True)
+                                        cur.execute("""
+                                                START TRANSACTION;
+                                                INSERT INTO Employees (Name, Post, Email, BankInfo, PhoneNumber, Password) 
+                                                VALUES ('John Doe', 'Customer Support', 'johndoe@example.com', '1234567890', 9876543210, 'password');
+                                                INSERT INTO HelpService (Employee) 
+                                                VALUES (LAST_INSERT_ID());
+                                                COMMIT;
+                                        """ , multi=True)
+                                        cur.execute("""
+                                                START TRANSACTION;
+                                                INSERT INTO RentalService (ChargesPerDay, NoCabAvailable, DetailsofStand) VALUES (50, 10, 'Stand A');
+                                                INSERT INTO Customer (Name, PhoneNumber, Rating, Email, Password) VALUES ('Jane Doe', '5555555555', 5, 'jane.doe@example.com', 'password');
+                                                INSERT INTO Trip (PickupLocation, DropLocation, CustomerID, VehicleID, PaymentMethod, Date) VALUES ('123 Main St', '456 Oak St', LAST_INSERT_ID(), 14, 1, NOW());
+                                                INSERT INTO Payment (Expiry_date, OTP, Type) VALUES (DATE_ADD(NOW(), INTERVAL 1 DAY), '123456', 'Credit Card');
+                                                COMMIT;
+                                        """ , multi=True)
+
+                                        # commit the transaction
+                                        con.commit()
+                                        print("Executed Non - Conflicting Transactions")
+
+                                except Exception as e:
+                                        # rollback if any error occurs
+                                        con.rollback()
+                                        print("Error occurred:", e)
+
+                                finally:
+                                        # close the cursor and database connection
+                                        con.close()
+                                        con.close()
+        
+                        if (m == 26):
+                                try:
+                                        cur.execute("""
+                                        START TRANSACTION;
+                                        UPDATE Customer SET Rating = Rating + 1 WHERE CustomerID = 1;
+                                        """, multi=True)
+                                        cur.execute("""
+                                        START TRANSACTION;
+                                        UPDATE Customer SET Rating = Rating - 1 WHERE CustomerID = 1;
+                                        UPDATE Driver SET TotalEarning = TotalEarning + 500 WHERE DriverID = 2;
+                                        UPDATE Driver SET TotalEarning = TotalEarning - 500 WHERE DriverID = 2;
+                                        """, multi=True)
+                                        cur.execute("""
+                                        COMMIT;
+                                        """ , multi=True)
+                                        cur.execute("""
+                                        COMMIT;
+                                        """ , multi=True)
+                                        con.commit()
+                                        print("Executed Conflicting Transactions")
+                                except Exception as e:
+                                        # rollback if any error occurs
+                                        con.rollback()
+                                        print("Error occurred:", e)
+
+                                finally:
+                                        # close the cursor and database connection
+                                        con.close()
+                                        con.close()
+
+                        if (m == 27):
+                                try:
+                                        cur.execute("""
+                                        START TRANSACTION;
+                                        UPDATE Customer SET Rating = Rating + 1 WHERE CustomerID = 1;
+                                        COMMIT;
+                                        """, multi=True)
+
+                                        cur.execute("""
+                                        START TRANSACTION;
+                                        UPDATE Customer SET Rating = Rating - 1 WHERE CustomerID = 1;
+                                        COMMIT;
+                                        """, multi=True)
+
+                                        cur.execute("""
+                                        START TRANSACTION;
+                                        UPDATE Driver SET TotalEarning = TotalEarning + 500 WHERE DriverID = 2;
+                                        UPDATE Driver SET TotalEarning = TotalEarning - 500 WHERE DriverID = 2;
+                                        COMMIT;
+                                        """, multi=True)
+                                # commit the transaction
+                                        con.commit()
+                                        print("Executed Non - Conflicting Transactions")
+
+                                except Exception as e:
+                                        # rollback if any error occurs
+                                        con.rollback()
+                                        print("Error occurred:", e)
+
+                                finally:
+                                        # close the cursor and database connection
+                                        con.close()
+                                        con.close()
+
+
+        else:
+               print("Employees ID does not exist")
+                                               
+if veiw == 3:
+        query = "SELECT COUNT(*) FROM Driver USE INDEX (dr_id) WHERE Driverid = %s"
+        cur.execute(query, (id,))
+
+        # Fetch the result of the query
+        result = cur.fetchone()
+        if result[0] == 1:
+                print("Welcome")
+                while True:
+                        # welcome()
+                        menutour_d()
+                        m = int(input("Enter the number of the query you want to run: "))
+
+                        if(m==1):
+                                df=pd.read_sql_query('SELECT driver.DriverID, driver.Name , driver.Rating , driver.VehicleID, vehicles.Capacity, vehicles.Status, vehicles.Model FROM driver JOIN vehicles ON driver.VehicleID = vehicles.VehicleID WHERE vehicles.Status =  "Available";', con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['DriverID','Name','Rating','VehicleID','Capacity', 'Status','Model']))
+                                con.commit()
+                                print()
+                        if(m==2):
+                                df=pd.read_sql_query('SELECT driver.DriverID, driver.Name , driver.Rating , driver.VehicleID, driver.Rating, driver.Email FROM Driver WHERE Rating >3;', con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['DriverID','Name','Rating','VehicleID','Rating', 'Email']))
+                                con.commit()
+                                print()
+
+                        if(m==3):
+                                cur.execute('SELECT AVG(driver.TotalEarning) FROM driver;')
+                                d=cur.fetchall()
+
+                                for i in d:
+                                        print("The average earning of the driver is:",d[0][0])
+
+                        if(m==4):
+                                df=pd.read_sql_query('SELECT * FROM employees WHERE Salary BETWEEN 100000 AND 150000;', con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['EmployeeID','Name','Post','Email','BankInfo', 'PhoneNumber','Salary','Password']))
+                                con.commit()
+                                print()
+
+                        if(m==5):
+                                df=pd.read_sql_query('SELECT driver.DriverID, driver.Name , driver.Rating , driver.VehicleID, vehicles.Capacity, vehicles.Status, vehicles.Model, driver.TotalEarning FROM driver JOIN vehicles ON driver.VehicleID = vehicles.VehicleID ORDER BY TotalEarning DESC LIMIT 10;', con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['DriverID','Name','Rating','VehicleID','Capacity','Status','Model','Total Earning']))
+                                con.commit()
+                                print()
+                        
+                        if(m==6):
+                                df=pd.read_sql_query("SELECT d.DriverID, YEAR(t.Date) AS Year, MONTH(t.Date) AS Month, SUM(t.Price) AS Earnings FROM Trip t INNER JOIN Vehicles v ON t.VehicleID = v.VehicleID INNER JOIN Driver d ON v.VehicleID = d.VehicleID GROUP BY d.DriverID, YEAR(t.Date), MONTH(t.Date) ORDER BY d.DriverID ASC;", con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['Driver Id','Year','Month','Earning']))
+                                con.commit()
+                                print()
+
+                        if(m==7):
+                                # cur.execute("""CREATE TRIGGER update_driver_earning1
+                                #     AFTER INSERT ON Trip
+                                #     FOR EACH ROW
+                                #     BEGIN
+                                #         UPDATE Driver
+                                #         SET TotalEarning = TotalEarning + NEW.Price
+                                #         WHERE Driver.DriverID = NEW.DriverID;
+                                #     END;""")
+                                # con.commit()
+                                cur.execute("INSERT INTO trip (PickupLocation, DropLocation, CustomerID, Price, VehicleID, PaymentMethod, Date) values ('NP', 'Kurukshetra', 65, 900, 10, 100, '2022-03-07');")
+                                con.commit()
+                                df=pd.read_sql_query("""SELECT TotalEarning FROM Driver WHERE DriverID = 1;""", con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['CusotmerId','Year','Month','Total spent']))
+                                con.commit()
+                                print()
+
+                        if(m==8):
+                                # cur.execute("""CREATE TRIGGER update_vehicle_status1 AFTER INSERT ON Trip FOR EACH ROW BEGIN UPDATE Vehicles SET Status = 'Unavailable' WHERE VehicleID = NEW.VehicleID; END""")
+                                # con.commit()
+                                cur.execute("insert into trip (PickupLocation, DropLocation, CustomerID, Price, VehicleID, PaymentMethod, Date) values ('NP', 'Kurukshetra', 61, 900, 11, 100, '2022-03-07 22:19:29');")
+                                con.commit()
+                                df=pd.read_sql_query("""SELECT Status FROM Vehicles WHERE VehicleID = 11;""", con)
+                                print("Following is the required table: ")
+                                print(tabulate(df,tablefmt = 'psql', headers = ['CusotmerId','Year','Month','Total spent']))
+                                con.commit()
+                                print()      
+
+                        if(m==9):
+                                break
+        else:
+                print("Employees ID does not exist")
