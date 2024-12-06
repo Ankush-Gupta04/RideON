@@ -1,6 +1,6 @@
 # RideON
 DBMS project
-Guide: Prof. Vikram Goyal                                                                                                              
+Guide: Prof. Vikram Goyal & Prof Mukesh Mohania                                                                                                               
                                                                                                                                         
 Implemented a reliable and efficient database management system (DBMS) for a cab booking system.
 Ensured seamless storage and retrieval of user profiles, booking requests, and real-time cab availability information.
